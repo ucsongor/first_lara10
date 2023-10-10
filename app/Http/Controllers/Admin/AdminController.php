@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Auth;
 use Validator;
@@ -31,7 +32,20 @@ class AdminController extends Controller
         return redirect('admin/login');
     }
 
-    public function updatePassword(){
+    public function updatePassword(Request $request){
+        if ($request->isMethod('post')){
+            $data = $request->all();
+            if(Hash::check($data['current_pwd'],Auth::guard('admin')->user()->password)){
+                if($data['new_pwd']==$data['confirm_pwd']){
+                    Admin::where('id', Auth::guard('admin')->user()->id)->update(['password'=>bcrypt($data['new_pwd'])]);
+                    return redirect()->back()->with('success_message','Password has been updated!');
+                }else{
+                    return redirect()->back()->with('error_message','Your New and Confirm Password is not matching!');
+                }
+            }else{
+                return redirect()->back()->with('error_message','Your Current Password is Incorrect!');
+            }
+        }
         return view('admin.update_password');
     }
 
